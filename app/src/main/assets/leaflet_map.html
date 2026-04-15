@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Village Health Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #map { width: 100%; height: 100%; }
+    body { background: #1B5E20; }
+    .custom-marker {
+        background: #F9A825;
+        border: 3px solid #1B5E20;
+        border-radius: 50%;
+        width: 16px; height: 16px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .cluster-circle {
+        background: rgba(231,76,60,0.25);
+        border: 2px solid rgba(231,76,60,0.6);
+        border-radius: 50%;
+    }
+    .leaflet-control-attribution { display: none !important; }
+    .pulse-marker {
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        background: #F9A825;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 rgba(249,168,37,0.6);
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(249,168,37,0.6); }
+        70% { box-shadow: 0 0 0 15px rgba(249,168,37,0); }
+        100% { box-shadow: 0 0 0 0 rgba(249,168,37,0); }
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+// Default center (India)
+var defaultLat = 20.2961;
+var defaultLng = 85.8245;
+var defaultZoom = 13;
+
+var map = L.map('map', {
+    zoomControl: false,
+    attributionControl: false,
+}).setView([defaultLat, defaultLng], defaultZoom);
+
+// Add tile layer (OSM)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+}).addTo(map);
+
+// Worker location marker
+var workerIcon = L.divIcon({
+    className: 'pulse-marker',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+});
+var workerMarker = null;
+
+// Cluster markers
+var clusterLayers = [];
+
+// Called from Kotlin via WebView.evaluateJavascript
+function setWorkerLocation(lat, lng) {
+    if (workerMarker) {
+        workerMarker.setLatLng([lat, lng]);
+    } else {
+        workerMarker = L.marker([lat, lng], { icon: workerIcon }).addTo(map);
+        workerMarker.bindPopup('<b>You are here</b>');
+    }
+    map.setView([lat, lng], defaultZoom);
+}
+
+function addClusterZone(lat, lng, radiusMeters, label, isCritical) {
+    var color = isCritical ? '#E74C3C' : '#F39C12';
+    var circle = L.circle([lat, lng], {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.15,
+        radius: radiusMeters,
+        weight: 2,
+    }).addTo(map);
+    circle.bindPopup('<b>' + label + '</b>');
+    clusterLayers.push(circle);
+}
+
+function clearClusters() {
+    for (var i = 0; i < clusterLayers.length; i++) {
+        map.removeLayer(clusterLayers[i]);
+    }
+    clusterLayers = [];
+}
+
+function setSyncPulse(isSyncing) {
+    // Visual feedback that sync is active
+    var el = document.querySelector('.pulse-marker');
+    if (el) {
+        el.style.background = isSyncing ? '#4CAF50' : '#F9A825';
+    }
+}
+</script>
+</body>
+</html>
