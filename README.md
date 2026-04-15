@@ -51,8 +51,6 @@ The app runs **entirely offline** without internet required for diagnosis, data 
   * Cluster detection                           
 ***
 
-***
-
 ## Tech Stack
 
 * Language: Kotlin 2.0
