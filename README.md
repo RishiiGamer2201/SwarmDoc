@@ -24,9 +24,6 @@ The app runs **entirely offline** without internet required for diagnosis, data 
 
 ## Architecture
 
-***
-                   SwarmDoc App                 
-***
   UI Layer (Jetpack Compose, Material 3)       
   * 6 Card Onboarding Walkthrough               
   * 5 Step Consultation Flow                    
